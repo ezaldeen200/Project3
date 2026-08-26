@@ -1,0 +1,6 @@
+# Vault data and secrets
+vault/data/
+vault/key/
+
+# Environment files
+.env
