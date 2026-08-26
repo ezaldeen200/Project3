@@ -1,6 +1,10 @@
-# Vault data and secrets
-vault/data/
+# Secrets
 vault/key/
+vault/data/
 
 # Environment files
 .env
+**/.env
+
+# GitHub self-hosted runner
+actions-runner/
