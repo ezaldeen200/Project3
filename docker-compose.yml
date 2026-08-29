@@ -33,8 +33,6 @@ services:
       context: ./Skills_Utilization./Skills_Utilization
       dockerfile: Dockerfile
     container_name: project3-app
-    env_file:
-      - ./Skills_Utilization./Skills_Utilization/.env
     environment:
       DATABASE_URL: postgresql://${username}:${password}@postgres:5432/${dbname}
     ports:
