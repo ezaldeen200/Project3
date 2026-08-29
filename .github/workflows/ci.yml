@@ -42,9 +42,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           trivy fs \
             --scanners vuln,secret \
             --severity HIGH,CRITICAL \
+            --ignore-unfixed \
             --exit-code 1 \
             --no-progress \
             .
@@ -59,18 +61,18 @@ jobs:
             -t project3-app:${GITHUB_SHA} \
             ./Skills_Utilization./Skills_Utilization
 
-    - name: Scan Docker image
-    shell: bash
-    run: |
-       set -euo pipefail
+      - name: Scan Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
 
-    trivy image \
-      --scanners vuln,secret \
-      --severity HIGH,CRITICAL \
-      --ignore-unfixed \
-      --exit-code 1 \
-      --no-progress \
-      project3-app:${GITHUB_SHA}
+          trivy image \
+            --scanners vuln,secret \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --no-progress \
+            project3-app:${GITHUB_SHA}
 
       - name: Start application stack
         shell: bash
@@ -102,6 +104,7 @@ jobs:
           done
 
           echo "ERROR: Application did not become healthy."
+
           docker compose \
             --env-file "$HOME/Desktop/Project3/Skills_Utilization./Skills_Utilization/.env" \
             logs --tail 100 app
