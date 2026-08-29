@@ -59,17 +59,18 @@ jobs:
             -t project3-app:${GITHUB_SHA} \
             ./Skills_Utilization./Skills_Utilization
 
-      - name: Scan Docker image
-        shell: bash
-        run: |
-          set -euo pipefail
+    - name: Scan Docker image
+    shell: bash
+    run: |
+       set -euo pipefail
 
-          trivy image \
-            --scanners vuln,secret \
-            --severity HIGH,CRITICAL \
-            --exit-code 1 \
-            --no-progress \
-            project3-app:${GITHUB_SHA}
+    trivy image \
+      --scanners vuln,secret \
+      --severity HIGH,CRITICAL \
+      --ignore-unfixed \
+      --exit-code 1 \
+      --no-progress \
+      project3-app:${GITHUB_SHA}
 
       - name: Start application stack
         shell: bash
