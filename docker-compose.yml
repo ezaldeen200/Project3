@@ -16,7 +16,7 @@ services:
       retries: 5
 
   vault:
-    image: hashicorp/vault:1.17.6
+    image: hashicorp/vault:1.17
     container_name: project3-vault
     cap_add:
       - IPC_LOCK
@@ -29,9 +29,7 @@ services:
     command: ["exec vault server -config=/vault/config/vault.hcl"]
 
   app:
-    build:
-      context: ./Skills_Utilization./Skills_Utilization
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE}
     container_name: project3-app
     environment:
       DATABASE_URL: postgresql://${username}:${password}@postgres:5432/${dbname}
@@ -40,6 +38,5 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
 volumes:
   postgres_data:

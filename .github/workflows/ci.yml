@@ -14,8 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci-cd:
-    name: Build, Scan and Deploy
+
+  build-push:
+    name: Build, Scan and Push
     runs-on: self-hosted
 
     steps:
@@ -59,7 +60,7 @@ jobs:
 
           docker build \
             --pull \
-            -t project3-app:${GITHUB_SHA} \
+            -t "project3-app:${GITHUB_SHA}" \
             ./Skills_Utilization./Skills_Utilization
 
       - name: Scan Docker image
@@ -73,7 +74,7 @@ jobs:
             --ignore-unfixed \
             --exit-code 1 \
             --no-progress \
-            project3-app:${GITHUB_SHA}
+            "project3-app:${GITHUB_SHA}"
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -92,21 +93,56 @@ jobs:
           docker tag "project3-app:${GITHUB_SHA}" "$IMAGE"
           docker push "$IMAGE"
 
+          echo "Image pushed successfully:"
+          echo "$IMAGE"
+
+
+  deploy:
+    name: Deploy
+    runs-on: self-hosted
+    needs: build-push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image from GHCR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
+
+          docker pull "$IMAGE"
+
+          echo "Image pulled successfully:"
+          echo "$IMAGE"
+
       - name: Start application stack
         shell: bash
         run: |
           set -euo pipefail
 
           ENV_FILE="/etc/project3/.env"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
 
           if [ ! -f "$ENV_FILE" ]; then
             echo "ERROR: Required .env file is missing at $ENV_FILE"
             exit 1
           fi
 
+          export APP_IMAGE="$IMAGE"
+
           docker compose \
             --env-file "$ENV_FILE" \
-            up -d --build
+            up -d
 
       - name: Wait for application
         shell: bash
@@ -124,6 +160,8 @@ jobs:
           done
 
           echo "ERROR: Application did not become healthy."
+
+          export APP_IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
 
           docker compose \
             --env-file "/etc/project3/.env" \
